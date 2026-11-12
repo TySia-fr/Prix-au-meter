@@ -1,0 +1,169 @@
+// Prisma models cover the transactional/relational part of the schema.
+// Geometry columns (`point`), GiST/trigram indexes and the materialized
+// views used for aggregates are created in raw SQL in
+// prisma/migrations/0001_init/migration.sql (Prisma cannot express them).
+
+generator client {
+  provider     = "prisma-client"
+  output       = "../src/generated/prisma"
+  moduleFormat = "esm"
+}
+
+datasource db {
+  provider = "postgresql"
+}
+
+enum PropertyType {
+  HOUSE
+  APARTMENT
+}
+
+/// One retained DVF mutation (a single house or apartment sale) after cleaning.
+model Sale {
+  id             BigInt       @id @default(autoincrement())
+  departmentCode String       @map("department_code") @db.VarChar(3)
+  mutationId     String       @map("mutation_id") @db.VarChar(32)
+  date           DateTime     @db.Date
+  year           Int          @db.SmallInt
+  communeCode    String       @map("commune_code") @db.VarChar(5)
+  streetKey      String       @map("street_key") @db.VarChar(16)
+  streetName     String       @map("street_name") @db.VarChar(160)
+  irisCode       String?      @map("iris_code") @db.VarChar(9)
+  propertyType   PropertyType @map("property_type")
+  surface        Int          @db.SmallInt
+  rooms          Int?         @db.SmallInt
+  value          Decimal      @db.Decimal(14, 2)
+  pricePerM2     Float        @map("price_per_m2") @db.Real
+  lat            Float
+  lon            Float
+  /// Generated column: point(lon, lat) — see migration.sql
+  geom           Unsupported("point")?
+
+  commune Commune @relation(fields: [communeCode], references: [code])
+
+  @@unique([departmentCode, mutationId])
+  @@index([departmentCode, year])
+  @@index([communeCode, year])
+  @@index([irisCode, year])
+  @@index([streetKey])
+  @@map("sale")
+}
+
+model Commune {
+  code           String @id @db.VarChar(5)
+  name           String @db.VarChar(120)
+  departmentCode String @map("department_code") @db.VarChar(3)
+
+  sales Sale[]
+  iris  Iris[]
+
+  @@map("commune")
+}
+
+/// INSEE IRIS — the "quartier" unit used for neighbourhood figures.
+model Iris {
+  code        String @id @db.VarChar(9)
+  name        String @db.VarChar(160)
+  communeCode String @map("commune_code") @db.VarChar(5)
+  /// Simplified GeoJSON geometry (WGS84) for highlighting on the map.
+  geometry    Json
+
+  commune   Commune    @relation(fields: [communeCode], references: [code])
+  favorites Favorite[]
+
+  @@index([communeCode])
+  @@map("iris")
+}
+
+/// Audit trail of every import run (reproducibility + data provenance).
+model ImportRun {
+  id             Int       @id @default(autoincrement())
+  source         String    @db.VarChar(16) // "dvf" | "synthetic"
+  departmentCode String    @map("department_code") @db.VarChar(3)
+  years          Int[]
+  rowsRead       Int       @default(0) @map("rows_read")
+  mutationsKept  Int       @default(0) @map("mutations_kept")
+  rejections     Json      @default("{}")
+  status         String    @default("running") @db.VarChar(16)
+  startedAt      DateTime  @default(now()) @map("started_at")
+  finishedAt     DateTime? @map("finished_at")
+
+  @@map("import_run")
+}
+
+// ---- Better Auth tables (schema follows better-auth core schema) ----
+
+model User {
+  id            String     @id
+  name          String
+  email         String     @unique
+  emailVerified Boolean    @default(false)
+  image         String?
+  createdAt     DateTime   @default(now())
+  updatedAt     DateTime   @updatedAt
+  sessions      Session[]
+  accounts      Account[]
+  favorites     Favorite[]
+
+  @@map("user")
+}
+
+model Session {
+  id        String   @id
+  expiresAt DateTime
+  token     String   @unique
+  createdAt DateTime @default(now())
+  updatedAt DateTime @updatedAt
+  ipAddress String?
+  userAgent String?
+  userId    String
+  user      User     @relation(fields: [userId], references: [id], onDelete: Cascade)
+
+  @@index([userId])
+  @@map("session")
+}
+
+model Account {
+  id                    String    @id
+  accountId             String
+  providerId            String
+  userId                String
+  user                  User      @relation(fields: [userId], references: [id], onDelete: Cascade)
+  accessToken           String?
+  refreshToken          String?
+  idToken               String?
+  accessTokenExpiresAt  DateTime?
+  refreshTokenExpiresAt DateTime?
+  scope                 String?
+  password              String?
+  createdAt             DateTime  @default(now())
+  updatedAt             DateTime  @updatedAt
+
+  @@index([userId])
+  @@map("account")
+}
+
+model Verification {
+  id         String   @id
+  identifier String
+  value      String
+  expiresAt  DateTime
+  createdAt  DateTime @default(now())
+  updatedAt  DateTime @updatedAt
+
+  @@index([identifier])
+  @@map("verification")
+}
+
+model Favorite {
+  id        String   @id @default(uuid()) @db.Uuid
+  userId    String   @map("user_id")
+  irisCode  String   @map("iris_code") @db.VarChar(9)
+  createdAt DateTime @default(now()) @map("created_at")
+
+  user User @relation(fields: [userId], references: [id], onDelete: Cascade)
+  iris Iris @relation(fields: [irisCode], references: [code], onDelete: Cascade)
+
+  @@unique([userId, irisCode])
+  @@map("favorite")
+}
