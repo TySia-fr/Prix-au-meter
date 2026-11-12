@@ -11,3 +11,4 @@ test-results/
 *.tsbuildinfo
 next-env.d.ts
 coverage/
+data/fixtures/synthetic/
