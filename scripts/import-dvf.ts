@@ -86,6 +86,10 @@ async function main() {
     if (!args.irisFile && !args.sourceDir) await download(IRIS_URL.replace("{dept}", args.dept), irisPath);
     const { features, invalid } = parseIrisGeoJson(JSON.parse(await readFile(irisPath, "utf8")));
     console.log(`IRIS: ${features.length} polygons (${invalid} invalid features skipped)`);
+    if (features.length === 0) {
+      // Without polygons every sale would lose its neighbourhood: stop instead of importing degraded data.
+      throw new Error(`No valid IRIS polygon in ${irisPath}. Download the IRIS GeoJSON for department ${args.dept} manually and pass --iris-file <path>.`);
+    }
     const index = new IrisIndex(features);
 
     // 2. Sales, one department-year file at a time (bounded memory, national scale)

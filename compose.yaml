@@ -1,10 +1,17 @@
-# Production stack for the VPS. Usage:
-#   cp .env.example .env   # then set real secrets
+# Production stack for the VPS. Images are built by GitHub Actions and pulled
+# from GHCR — nothing is compiled on the server (small disk/RAM footprint).
+#
 #   docker compose up -d db
 #   docker compose run --rm tools pnpm db:migrate
-#   docker compose run --rm tools pnpm data:import --dept 34 --years 2021-2025
+#   docker compose run --rm tools pnpm data:import --dept 34
 #   docker compose up -d app
+#   docker image rm ghcr.io/tysia-fr/prix-au-meter-tools:latest   # free ~1 GB afterwards
+#
 # Nginx on the host terminates TLS and proxies to 127.0.0.1:3000.
+x-logging: &logging
+  driver: json-file
+  options: { max-size: "10m", max-file: "3" }   # stop container logs from filling the disk
+
 services:
   db:
     image: postgres:16-alpine
@@ -13,17 +20,19 @@ services:
       POSTGRES_USER: ${POSTGRES_USER:-pam}
       POSTGRES_PASSWORD: ${POSTGRES_PASSWORD:?set POSTGRES_PASSWORD}
       POSTGRES_DB: ${POSTGRES_DB:-pam}
+    command: ["postgres", "-c", "shared_buffers=128MB", "-c", "max_connections=30", "-c", "max_wal_size=512MB"]
     volumes:
       - pgdata:/var/lib/postgresql/data
     healthcheck:
       test: ["CMD-SHELL", "pg_isready -U $${POSTGRES_USER:-pam}"]
       interval: 5s
       retries: 10
+    mem_limit: 512m
+    logging: *logging
     # Not published on the host: only reachable from the compose network.
 
   app:
-    build: { context: ., target: runtime }
-    image: prix-au-metre:latest
+    image: ghcr.io/tysia-fr/prix-au-meter:latest
     restart: unless-stopped
     depends_on: { db: { condition: service_healthy } }
     environment:
@@ -31,17 +40,21 @@ services:
       BETTER_AUTH_SECRET: ${BETTER_AUTH_SECRET:?set BETTER_AUTH_SECRET}
       BETTER_AUTH_URL: ${BETTER_AUTH_URL:?set BETTER_AUTH_URL}
       GEOCODER_URL: ${GEOCODER_URL:-https://data.geopf.fr/geocodage}
+      PG_POOL_MAX: "5"
     ports:
       - "127.0.0.1:3000:3000"
+    mem_limit: 384m
+    logging: *logging
 
   tools:
-    build: { context: ., target: tools }
+    image: ghcr.io/tysia-fr/prix-au-meter-tools:latest
     profiles: ["tools"]
     depends_on: { db: { condition: service_healthy } }
     environment:
       DATABASE_URL: postgresql://${POSTGRES_USER:-pam}:${POSTGRES_PASSWORD}@db:5432/${POSTGRES_DB:-pam}
     volumes:
       - ./data:/app/data
+    logging: *logging
 
 volumes:
   pgdata:

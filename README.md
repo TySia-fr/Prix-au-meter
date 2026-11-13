@@ -148,17 +148,22 @@ pnpm build && pnpm test:e2e   # Playwright: search → map → trend → compari
 
 ### Deployment (VPS, Docker)
 
+Images are built and pushed to GHCR by CI (`ghcr.io/tysia-fr/prix-au-meter`, `…-tools`); the server only pulls them.
+
 ```bash
-# on the server, in the repo directory
-cp .env.example .env && nano .env    # real POSTGRES_PASSWORD, BETTER_AUTH_SECRET, BETTER_AUTH_URL=https://prix.siavashizadi.com
+# on the server — only compose.yaml, .env and deploy/ are needed
+cp .env.example .env && nano .env    # POSTGRES_PASSWORD, BETTER_AUTH_SECRET, BETTER_AUTH_URL=https://prix.siavashizadi.com
 docker compose up -d db
 docker compose run --rm tools pnpm db:migrate
 docker compose run --rm tools pnpm data:import --dept 34
-docker compose up -d --build app
+docker compose up -d app
+docker image rm ghcr.io/tysia-fr/prix-au-meter-tools:latest   # reclaim disk
 sudo cp deploy/nginx-prix.conf /etc/nginx/sites-available/prix.siavashizadi.com
 sudo ln -s /etc/nginx/sites-available/prix.siavashizadi.com /etc/nginx/sites-enabled/
 sudo nginx -t && sudo systemctl reload nginx && sudo certbot --nginx -d prix.siavashizadi.com
 ```
+
+Update: `docker compose pull app && docker compose up -d app`.
 
 CI (GitHub Actions): lint · types · unit → Prisma migrations · synthetic import + idempotent re-import · integration · build · Playwright/axe, and a Docker image build.
 
