@@ -4,6 +4,8 @@ import { GeistMono } from "geist/font/mono";
 import "maplibre-gl/dist/maplibre-gl.css";
 import "./globals.css";
 import { SiteHeader } from "@/components/site-header";
+import { DemoBanner } from "@/components/demo-banner";
+import { datasetInfo } from "@/server/queries";
 
 export const metadata: Metadata = {
   title: { default: "Prix au mètre — prix immobiliers par rue", template: "%s · Prix au mètre" },
@@ -14,7 +16,8 @@ export const metadata: Metadata = {
 
 export const viewport: Viewport = { themeColor: "#0a0b0f", colorScheme: "dark" };
 
-export default function RootLayout({ children }: { children: React.ReactNode }) {
+export default async function RootLayout({ children }: { children: React.ReactNode }) {
+  const info = await datasetInfo().catch(() => ({ source: null }));
   return (
     <html lang="fr" className={`${GeistSans.variable} ${GeistMono.variable}`}>
       <body className="min-h-dvh flex flex-col">
@@ -22,6 +25,7 @@ export default function RootLayout({ children }: { children: React.ReactNode }) 
           Aller au contenu
         </a>
         <SiteHeader />
+        <DemoBanner source={info.source} />
         <main id="contenu" className="flex-1 flex flex-col">{children}</main>
         <footer className="border-t border-border px-4 py-3 text-xs text-muted">
           Source : Demandes de valeurs foncières (DGFiP), version géolocalisée Etalab — Licence Ouverte 2.0 ·

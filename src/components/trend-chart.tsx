@@ -40,7 +40,7 @@ export function TrendChart({ series, title }: { series: Series[]; title: string 
   });
 
   return (
-    <figure className="space-y-2">
+    <figure className="max-w-2xl space-y-2">
       <figcaption className="sr-only">{title}</figcaption>
       <svg viewBox={`0 0 ${W} ${H}`} className="w-full" role="img" aria-label={`${title}. Détail dans le tableau ci-dessous.`}>
         {ticks.map((t) => (
@@ -54,7 +54,7 @@ export function TrendChart({ series, title }: { series: Series[]; title: string 
         ))}
         {series.map((s, i) => (
           <g key={s.label}>
-            <path d={paths[i]} pathLength={1000} fill="none" stroke={s.color} strokeWidth="2.2" strokeDasharray={s.dash}
+            <path d={paths[i]} pathLength={s.dash ? undefined : 1000} fill="none" stroke={s.color} strokeWidth="2.2" strokeDasharray={s.dash}
               strokeLinejoin="round" strokeLinecap="round" className={s.dash ? undefined : "line-draw"} />
             {s.points.map((p) => p.value != null && <circle key={p.year} cx={x(p.year)} cy={yv(p.value)} r="3" fill={s.color} />)}
           </g>

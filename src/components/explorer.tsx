@@ -154,7 +154,7 @@ export function Explorer({ period, signedIn }: { period: { yearFrom: number; yea
         </details>
       </aside>
 
-      <div className="relative min-h-[60vh] flex-1">
+      <div className="relative h-[60vh] flex-1 md:sticky md:top-0 md:h-dvh md:self-start">
         <PriceMap
           focus={focus}
           highlight={area?.geometry ?? null}

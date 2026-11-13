@@ -45,8 +45,11 @@ export function PriceMap({ focus, highlight, selectedStreet, onStreet, onCommune
   const container = useRef<HTMLDivElement>(null);
   const mapRef = useRef<MlMap | null>(null);
   const handlers = useRef({ onStreet, onCommune, onVisible });
+  // Latest props for the async init (the map may finish loading after the first selection).
+  const latest = useRef({ focus, highlight });
   useEffect(() => {
     handlers.current = { onStreet, onCommune, onVisible };
+    latest.current = { focus, highlight };
   });
 
   useEffect(() => {
@@ -55,12 +58,13 @@ export function PriceMap({ focus, highlight, selectedStreet, onStreet, onCommune
     (async () => {
       const [maplibregl, style] = await Promise.all([import("maplibre-gl"), loadStyle()]);
       if (disposed || !container.current) return;
+      maplibregl.setWorkerUrl("/maplibre/maplibre-gl-worker.mjs");
       const reduceMotion = window.matchMedia("(prefers-reduced-motion: reduce)").matches;
       const map = new maplibregl.Map({
         container: container.current,
         style,
-        center: [3.8767, 43.6108],
-        zoom: 12.5,
+        center: latest.current.focus ? [latest.current.focus.lon, latest.current.focus.lat] : [3.8767, 43.6108],
+        zoom: latest.current.focus?.zoom ?? 12.5,
         attributionControl: { compact: true, customAttribution: "Données DVF © DGFiP / Etalab" },
         fadeDuration: reduceMotion ? 0 : 300,
       });
@@ -127,6 +131,8 @@ export function PriceMap({ focus, highlight, selectedStreet, onStreet, onCommune
           }
         };
         map.on("moveend", refresh);
+        const h = latest.current.highlight;
+        if (h) (map.getSource("highlight") as GeoJSONSource).setData({ type: "Feature", geometry: h, properties: {} });
         void refresh();
         container.current?.setAttribute("data-map-ready", "true");
       });
@@ -164,7 +170,12 @@ export function PriceMap({ focus, highlight, selectedStreet, onStreet, onCommune
     }
   }, [selectedStreet]);
 
-  return <div ref={container} className="absolute inset-0" data-testid="map" />;
+  // MapLibre forces `position: relative` on its container, so position a wrapper instead.
+  return (
+    <div className="absolute inset-0">
+      <div ref={container} className="h-full w-full" data-testid="map" />
+    </div>
+  );
 }
 
 function escapeHtml(s: string) {

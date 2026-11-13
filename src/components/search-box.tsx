@@ -49,7 +49,7 @@ export function SearchBox({ onSelect, label = "Rechercher une ville ou un quarti
         type="search"
         role="combobox"
         aria-expanded={open}
-        aria-controls={listId}
+        aria-controls={open && hits.length > 0 ? listId : undefined}
         aria-autocomplete="list"
         aria-activedescendant={active >= 0 ? `${listId}-${active}` : undefined}
         autoComplete="off"
