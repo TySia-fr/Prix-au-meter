@@ -51,7 +51,7 @@ export function SearchBox({ onSelect, label = "Rechercher une ville ou un quarti
         aria-expanded={open}
         aria-controls={open && hits.length > 0 ? listId : undefined}
         aria-autocomplete="list"
-        aria-activedescendant={active >= 0 ? `${listId}-${active}` : undefined}
+        aria-activedescendant={open && active >= 0 && active < hits.length ? `${listId}-${active}` : undefined}
         autoComplete="off"
         placeholder="Montpellier, Antigone…"
         value={q}
