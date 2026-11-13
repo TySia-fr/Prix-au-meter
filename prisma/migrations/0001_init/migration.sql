@@ -169,9 +169,11 @@ CREATE OR REPLACE FUNCTION f_unaccent(text) RETURNS text
   LANGUAGE sql IMMUTABLE PARALLEL SAFE STRICT
   AS $$ SELECT public.unaccent('public.unaccent'::regdictionary, $1) $$;
 
--- Fuzzy, accent-insensitive neighbourhood / city search.
-CREATE INDEX "iris_name_trgm_idx" ON "iris" USING gin (lower(f_unaccent("name")) gin_trgm_ops);
-CREATE INDEX "commune_name_trgm_idx" ON "commune" USING gin (lower(f_unaccent("name")) gin_trgm_ops);
+-- Fuzzy, accent-insensitive neighbourhood / city search. GiST (not GIN) so the
+-- word-similarity distance operator (<<->) can drive a KNN index scan that stops
+-- after LIMIT rows, instead of ranking every match.
+CREATE INDEX "iris_name_trgm_idx" ON "iris" USING gist (lower(f_unaccent("name")) gist_trgm_ops);
+CREATE INDEX "commune_name_trgm_idx" ON "commune" USING gist (lower(f_unaccent("name")) gist_trgm_ops);
 
 -- Reference window for "current" figures: the 3 most recent years in the data.
 CREATE VIEW v_period AS
@@ -241,3 +243,6 @@ HAVING NOT (GROUPING(s.iris_code) = 0 AND s.iris_code IS NULL);
 
 CREATE UNIQUE INDEX mv_area_stats_pk ON mv_area_stats (level, code, property_type);
 CREATE INDEX mv_area_stats_geom_idx ON mv_area_stats USING gist (geom) WHERE level = 'commune' AND property_type = 'ALL';
+-- Wide (national) viewports: walk communes by sample size and stop at the LIMIT
+-- instead of sorting every commune in the box.
+CREATE INDEX mv_area_stats_commune_n_idx ON mv_area_stats (n DESC) WHERE level = 'commune' AND property_type = 'ALL';
