@@ -21,7 +21,7 @@ COPY . .
 # Public, non-secret build-time config only. Secrets are injected at runtime.
 ARG NEXT_PUBLIC_MAP_STYLE_URL=https://tiles.openfreemap.org/styles/dark
 ENV NEXT_PUBLIC_MAP_STYLE_URL=$NEXT_PUBLIC_MAP_STYLE_URL
-RUN DATABASE_URL=postgresql://build@localhost/build pnpm build
+RUN DATABASE_URL=postgresql://build@localhost/build sh -c "pnpm db:generate && pnpm build"
 
 # One-shot image for migrations and the DVF import (`docker compose run --rm tools ...`).
 FROM build AS tools
