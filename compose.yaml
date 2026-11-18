@@ -7,7 +7,7 @@
 #   docker compose up -d app
 #   docker image rm ghcr.io/tysia-fr/prix-au-meter-tools:latest   # free ~1 GB afterwards
 #
-# Nginx on the host terminates TLS and proxies to 127.0.0.1:3000.
+# Nginx on the host terminates TLS and proxies to 127.0.0.1:3107 (APP_PORT).
 x-logging: &logging
   driver: json-file
   options: { max-size: "10m", max-file: "3" }   # stop container logs from filling the disk
@@ -42,7 +42,7 @@ services:
       GEOCODER_URL: ${GEOCODER_URL:-https://data.geopf.fr/geocodage}
       PG_POOL_MAX: "5"
     ports:
-      - "127.0.0.1:3000:3000"
+      - "127.0.0.1:${APP_PORT:-3107}:3000"
     mem_limit: 384m
     logging: *logging
 
