@@ -29,7 +29,7 @@ Evidence = test, command output or file. ⏳ = needs something only the owner ca
 ## R6 — Real DVF data
 - [x] Source + licence verified (geo-dvf, Licence Ouverte 2.0, no re-identification, no indexing) — README, DECISIONS
 - [x] One-command import with download + cache — `pnpm data:import --dept 34`
-- [ ] ⏳ Run it on real Hérault data (download blocked in the build sandbox) — owner action #1
+- [x] Real Hérault import 2021–2025 on the VPS: 412 496 rows → 104 883 sales, 578 IRIS, 76 s (2026-11-18)
 
 ## R7 — PostgreSQL at scale
 - [x] Indexes (GiST point, GiST trigram, partial btree), MVs with GROUPING SETS, CONCURRENT refresh — `prisma/migrations/0001_init/migration.sql`
@@ -48,5 +48,5 @@ Evidence = test, command output or file. ⏳ = needs something only the owner ca
 - [x] Vitest unit (28) + integration (5), Playwright e2e (4)
 - [x] Dockerfile (multi-stage, non-root, healthcheck), compose, Nginx config — not built in sandbox (no registry access); built by CI job `docker`
 - [x] GitHub Actions CI — `.github/workflows/ci.yml`
-- [ ] ⏳ First green CI run on GitHub — owner action #2
-- [ ] ⏳ Live deployment on the VPS — owner action #3
+- [x] CI green on GitHub (lint · types · unit → migrations · import · integration · build · e2e → GHCR images)
+- [x] Live: https://prixaumeter.siavashizadi.com (Docker on the VPS, images pulled from GHCR, Nginx + Let's Encrypt)

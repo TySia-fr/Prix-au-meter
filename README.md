@@ -2,7 +2,7 @@
 
 Interactive map of French residential property prices — median **€/m², street by street**, built from the official DVF open dataset. Search a city or neighbourhood, see the price trend over recent years, compare two neighbourhoods side by side and save favourites.
 
-> **Status:** the import pipeline, database, API and UI run end-to-end and are covered by unit, integration and Playwright tests. The screenshots and benchmark below were made with **synthetic DVF-shaped data** (see [Data](#data-source-and-licence)); load the real Hérault data with `pnpm data:import --dept 34`.
+> **Live:** https://prixaumeter.siavashizadi.com — real DVF data for Hérault, 2021–2025 (104 883 sales after cleaning). The benchmark below uses synthetic data at national scale (5 M sales).
 
 | Map (neighbourhood selected) | Comparison |
 |---|---|

@@ -1,6 +1,6 @@
 # Progress
 
-_Last update: 2026-11-13_
+_Last update: 2026-11-18_
 
 ## State
 All features R1–R5 work end-to-end on synthetic DVF-shaped data. Local verification (last run):
@@ -17,16 +17,14 @@ All features R1–R5 work end-to-end on synthetic DVF-shaped data. Local verific
 
 Not verifiable from the build sandbox (network allowlist): real DVF download, `prisma migrate deploy` (Prisma schema-engine binary download), `docker build` (no registry). All three run in CI / on the VPS.
 
-## Resume here
-1. Owner actions below.
-2. After the first real import: check `SELECT rejections FROM import_run ORDER BY id DESC LIMIT 1` — rejection shares should look like: multiple_dwellings and no_dwelling dominant, price_fence ≲ 3 %.
-3. Retake README screenshots on real data with the basemap (`pnpm screenshots` against the running app).
+## Live
+https://prixaumeter.siavashizadi.com — real DVF data for Hérault (2021–2025): 104 883 sales, 578 IRIS. Montpellier median 3 476 €/m² (n = 12 733).
 
-## Owner actions
-1. **Real data**: `pnpm data:import --dept 34` on a machine with internet (laptop or VPS).
-2. **GitHub**: create `TySia-fr/prix-au-metre`, push, check that the 3 CI jobs pass.
-3. **VPS**: DNS `prixaumeter.siavashizadi.com` → TySia, Docker installed, follow README → Deployment.
+## Resume here
+1. Retake README screenshots on real data with the basemap.
+2. Optional: import more departments (`docker compose run --rm tools pnpm data:import --dept 30`), re-run the benchmark on real data.
 
 ## Log
 - 2026-11-12 — scaffold, schema + MVs, import pipeline, synthetic generator, API, UI, unit tests.
 - 2026-11-13 — Playwright + axe, access-control proof, benchmarks (found and fixed 2 slow queries), Docker/compose/Nginx, CI, docs.
+- 2026-11-18 — subdomain prixaumeter, app on 127.0.0.1:3107, real import on the VPS, live with HTTPS.
