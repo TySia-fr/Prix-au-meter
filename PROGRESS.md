@@ -25,7 +25,7 @@ Not verifiable from the build sandbox (network allowlist): real DVF download, `p
 ## Owner actions
 1. **Real data**: `pnpm data:import --dept 34` on a machine with internet (laptop or VPS).
 2. **GitHub**: create `TySia-fr/prix-au-metre`, push, check that the 3 CI jobs pass.
-3. **VPS**: DNS `prix.siavashizadi.com` → TySia, Docker installed, follow README → Deployment.
+3. **VPS**: DNS `prix-au-meter.siavashizadi.com` → TySia, Docker installed, follow README → Deployment.
 
 ## Log
 - 2026-11-12 — scaffold, schema + MVs, import pipeline, synthetic generator, API, UI, unit tests.

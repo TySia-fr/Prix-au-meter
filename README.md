@@ -152,15 +152,15 @@ Images are built and pushed to GHCR by CI (`ghcr.io/tysia-fr/prix-au-meter`, `â€
 
 ```bash
 # on the server â€” only compose.yaml, .env and deploy/ are needed
-cp .env.example .env && nano .env    # POSTGRES_PASSWORD, BETTER_AUTH_SECRET, BETTER_AUTH_URL=https://prix.siavashizadi.com
+cp .env.example .env && nano .env    # POSTGRES_PASSWORD, BETTER_AUTH_SECRET, BETTER_AUTH_URL=https://prix-au-meter.siavashizadi.com
 docker compose up -d db
 docker compose run --rm tools pnpm db:migrate
 docker compose run --rm tools pnpm data:import --dept 34
 docker compose up -d app
 docker image rm ghcr.io/tysia-fr/prix-au-meter-tools:latest   # reclaim disk
-sudo cp deploy/nginx-prix.conf /etc/nginx/sites-available/prix.siavashizadi.com
-sudo ln -s /etc/nginx/sites-available/prix.siavashizadi.com /etc/nginx/sites-enabled/
-sudo nginx -t && sudo systemctl reload nginx && sudo certbot --nginx -d prix.siavashizadi.com
+sudo cp deploy/nginx-prix-au-meter.conf /etc/nginx/sites-available/prix-au-meter.siavashizadi.com
+sudo ln -s /etc/nginx/sites-available/prix-au-meter.siavashizadi.com /etc/nginx/sites-enabled/
+sudo nginx -t && sudo systemctl reload nginx && sudo certbot --nginx -d prix-au-meter.siavashizadi.com
 ```
 
 Update: `docker compose pull app && docker compose up -d app`.
